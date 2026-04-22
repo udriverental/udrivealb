@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDrive | Boutique Car Rental 🇦🇱 🇽🇰</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Geist+Mono:wght@400;700&family=Geist:wght@300;500;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root { --paper: #FBF7EE; --card: #F5EEE2; --ink: #0F0D0B; --orange: #F26B1F; --wa-green: #25D366; }
+        body { background-color: var(--paper); color: var(--ink); font-family: 'Geist', sans-serif; overflow-x: hidden; }
+        .serif-italic { font-family: 'Newsreader', serif; font-weight: 400; font-style: italic; }
+        .mono-eyebrow { font-family: 'Geist Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; }
+        .arabic { font-family: 'Cairo', sans-serif; }
+        
+        /* Interactive Search Card */
+        .search-hit-area { position: relative; cursor: pointer; transition: background 0.2s; }
+        .search-hit-area:hover { background: rgba(0,0,0,0.02); }
+        .search-hit-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 10; }
+
+        .gallery-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.2); transition: all 0.3s; }
+        .gallery-dot.active { background: var(--orange); width: 16px; border-radius: 10px; }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const WHATSAPP_NUM = "355693755827";
+        const ADMIN_PASS = "udrive2026";
+
+        const App = () => {
+            const [lang, setLang] = useState(localStorage.getItem('ud-lang') || 'EN');
+            const [fleet, setFleet] = useState([]);
+            const [photos, setPhotos] = useState({}); // Stores arrays of images per car
+            const [isAdminOpen, setIsAdminOpen] = useState(false);
+            const [searchState, setSearchState] = useState({
+                location: 'TIA',
+                pickupDate: new Date().toISOString().split('T')[0],
+                pickupTime: '10:00',
+                returnDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                returnTime: '10:00'
+            });
+
+            useEffect(() => {
+                const savedFleet = localStorage.getItem('udrive-fleet-custom');
+                const savedPhotos = localStorage.getItem('udrive-photos');
+                if(savedFleet) setFleet(JSON.parse(savedFleet));
+                if(savedPhotos) setPhotos(JSON.parse(savedPhotos));
+            }, []);
+
+            const t = {
+                EN: {
+                    hero: "Your trusted Car Rental",
+                    subline: "❇️ No hidden fees\n📞 24/7 support\n💎 Albanian hospitality\nDeposit returned in cash instantly.",
+                    locations: { TIA: "Tirana Airport (TIA)", PRN: "Pristina Airport (PRN)" },
+                    bookNow: "Book via WhatsApp",
+                },
+                AR: {
+                    hero: "شريكك الموثوق لتأجير السيارات",
+                    subline: "❇️ لا توجد رسوم خفية\n📞 دعم على مدار الساعة\n💎 كرم ضيافة ألباني\nيتم إرجاع الوديعة نقدًا فورًا.",
+                    locations: { TIA: "مطار تيرانا (TIA)", PRN: "مطار بريشتينا (PRN)" },
+                    bookNow: "احجز عبر واتساب",
+                }
+            }[lang];
+
+            const handleWhatsApp = (car) => {
+                const msg = `Hello UDrive! 🇦🇱🇽🇰\n\nI want to book: ${car.name} (${car.year})\nLocation: ${t.locations[searchState.location]}\nPickup: ${searchState.pickupDate} at ${searchState.pickupTime}\nReturn: ${searchState.returnDate} at ${searchState.returnTime}\n\nRate: €${car.pricePerDay}/day`;
+                window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`, '_blank');
+            };
+
+            return (
+                <div dir={lang === 'AR' ? 'rtl' : 'ltr'} className={lang === 'AR' ? 'arabic' : ''}>
+                    <nav className="flex justify-between items-center px-6 py-6 border-b border-black/5">
+                        <span className="text-2xl font-bold tracking-tighter">UDRIVE</span>
+                        <button onClick={() => setLang(lang === 'EN' ? 'AR' : 'EN')} className="px-4 py-1 rounded-full border border-black/10 text-sm">
+                            {lang === 'EN' ? 'العربية' : 'English'}
+                        </button>
+                    </nav>
+
+                    <header className="px-6 py-12 md:py-20 max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h1 className="text-5xl md:text-7xl font-light mb-6">
+                                {t.hero.split('Rental')[0]} <span className="serif-italic">Rental</span> 🚗
+                            </h1>
+                            <p className="opacity-70 whitespace-pre-line leading-relaxed">{t.subline}</p>
+                        </div>
+
+                        <div className="bg-[#F5EEE2] p-8 rounded-3xl border border-black/5 shadow-sm space-y-6">
+                            <div>
+                                <label className="mono-eyebrow opacity-40 block mb-2">Location</label>
+                                <select className="w-full bg-transparent border-b border-black/20 py-2 font-bold outline-none cursor-pointer" 
+                                    value={searchState.location}
+                                    onChange={(e) => setSearchState({...searchState, location: e.target.value})}>
+                                    <option value="TIA">{t.locations.TIA}</option>
+                                    <option value="PRN">{t.locations.PRN}</option>
+                                </select>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="search-hit-area p-3 border-b border-black/20">
+                                    <label className="mono-eyebrow opacity-40 block mb-1">Pick-up</label>
+                                    <div className="font-bold text-sm">{searchState.pickupDate} <span className="opacity-50 ml-1">{searchState.pickupTime}</span></div>
+                                    <input type="date" value={searchState.pickupDate} onChange={(e) => setSearchState({...searchState, pickupDate: e.target.value})} />
+                                    <input type="time" className="opacity-0 absolute top-0" value={searchState.pickupTime} onChange={(e) => setSearchState({...searchState, pickupTime: e.target.value})} />
+                                </div>
+                                <div className="search-hit-area p-3 border-b border-black/20">
+                                    <label className="mono-eyebrow opacity-40 block mb-1">Return</label>
+                                    <div className="font-bold text-sm">{searchState.returnDate} <span className="opacity-50 ml-1">{searchState.returnTime}</span></div>
+                                    <input type="date" value={searchState.returnDate} onChange={(e) => setSearchState({...searchState, returnDate: e.target.value})} />
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="px-6 pb-24 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {fleet.map(car => (
+                            <CarCard key={car.id} car={car} carPhotos={photos[car.id] || []} onBook={() => handleWhatsApp(car)} t={t} />
+                        ))}
+                    </main>
+
+                    <button onClick={() => prompt("Pass:") === ADMIN_PASS && setIsAdminOpen(true)} 
+                        className="fixed bottom-6 left-6 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center z-50">⚙️</button>
+
+                    {isAdminOpen && <AdminModal fleet={fleet} setFleet={setFleet} photos={photos} setPhotos={setPhotos} onClose={() => setIsAdminOpen(false)} />}
+                </div>
+            );
+        };
+
+        const CarCard = ({ car, carPhotos, onBook, t }) => {
+            const [activeIdx, setActiveIdx] = useState(0);
+            return (
+                <div className="bg-[#F5EEE2] rounded-[2.5rem] overflow-hidden border border-black/5 flex flex-col">
+                    <div className="h-64 relative bg-black/5 flex items-center justify-center">
+                        {carPhotos.length > 0 ? (
+                            <img src={carPhotos[activeIdx]} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="opacity-20 text-4xl">🚗</div>
+                        )}
+                        {carPhotos.length > 1 && (
+                            <div className="absolute bottom-4 inset-x-0 flex justify-center gap-1.5">
+                                {carPhotos.map((_, i) => (
+                                    <button key={i} onClick={() => setActiveIdx(i)} className={`gallery-dot ${activeIdx === i ? 'active' : ''}`} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    <div className="p-8">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-2xl font-bold">{car.name}</h3>
+                                <p className="opacity-40 text-sm font-mono uppercase">{car.transmission} • {car.fuel}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-2xl font-bold text-orange-600">€{car.pricePerDay}</p>
+                            </div>
+                        </div>
+                        <button onClick={onBook} className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:brightness-95 transition-all shadow-lg shadow-green-100">
+                            {t.bookNow}
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const AdminModal = ({ fleet, setFleet, photos, setPhotos, onClose }) => {
+            const [edit, setEdit] = useState(null);
+
+            const saveFleet = (nf) => { setFleet(nf); localStorage.setItem('udrive-fleet-custom', JSON.stringify(nf)); };
+
+            const handlePhotoUpload = (carId, files) => {
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const current = photos[carId] || [];
+                        const updated = {...photos, [carId]: [...current, e.target.result]};
+                        setPhotos(updated);
+                        localStorage.setItem('udrive-photos', JSON.stringify(updated));
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] p-6 overflow-y-auto">
+                    <div className="bg-white max-w-4xl mx-auto rounded-3xl p-8">
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-3xl font-bold">Manage Fleet</h2>
+                            <button onClick={onClose} className="text-2xl">✕</button>
+                        </div>
+
+                        <button onClick={() => {
+                            const nc = { id: Date.now(), name: "New Car", year: 2024, pricePerDay: 50, deposit: 200, transmission: "Auto", fuel: "Petrol", seats: 5 };
+                            saveFleet([...fleet, nc]);
+                        }} className="bg-black text-white px-8 py-3 rounded-xl mb-8 font-bold">+ Add New Car</button>
+
+                        <div className="grid gap-4">
+                            {fleet.map(c => (
+                                <div key={c.id} className="border p-4 rounded-2xl flex items-center gap-4 bg-gray-50">
+                                    <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                                        {photos[c.id] && <img src={photos[c.id][0]} className="w-full h-full object-cover"/>}
+                                    </div>
+                                    <div className="flex-grow">
+                                        <div className="font-bold">{c.name}</div>
+                                        <div className="text-xs opacity-50">€{c.pricePerDay}/day • {c.transmission}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setEdit(c)} className="p-2 border rounded-lg bg-white">✏️ Edit</button>
+                                        <button onClick={() => saveFleet(fleet.filter(x => x.id !== c.id))} className="p-2 text-red-500">🗑️</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {edit && (
+                            <div className="fixed inset-0 bg-white z-[110] p-10 overflow-y-auto">
+                                <div className="max-w-2xl mx-auto space-y-8 pb-20">
+                                    <h3 className="text-3xl font-bold border-b pb-4">Editing {edit.name}</h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="col-span-2">
+                                            <label className="mono-eyebrow mb-2 block">Car Model Name</label>
+                                            <input className="w-full border-b py-2 text-xl outline-none" value={edit.name} onChange={e => setEdit({...edit, name: e.target.value})} />
+                                        </div>
+                                        <div>
+                                            <label className="mono-eyebrow mb-2 block">Year</label>
+                                            <input type="number" className="w-full border-b py-2 outline-none" value={edit.year} onChange={e => setEdit({...edit, year: e.target.value})} />
+                                        </div>
+                                        <div>
+                                            <label className="mono-eyebrow mb-2 block">Transmission</label>
+                                            <select className="w-full border-b py-2 outline-none font-bold" value={edit.transmission} onChange={e => setEdit({...edit, transmission: e.target.value})}>
+                                                <option value="Auto">Automatic</option>
+                                                <option value="Manual">Manual</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="mono-eyebrow mb-2 block">Price Per Day (€)</label>
+                                            <input type="number" className="w-full border-b py-2 outline-none" value={edit.pricePerDay} onChange={e => setEdit({...edit, pricePerDay: e.target.value})} />
+                                        </div>
+                                        <div>
+                                            <label className="mono-eyebrow mb-2 block">Deposit (€)</label>
+                                            <input type="number" className="w-full border-b py-2 outline-none" value={edit.deposit} onChange={e => setEdit({...edit, deposit: e.target.value})} />
+                                        </div>
+                                        <div>
+                                            <label className="mono-eyebrow mb-2 block">Fuel</label>
+                                            <select className="w-full border-b py-2 outline-none" value={edit.fuel} onChange={e => setEdit({...edit, fuel: e.target.value})}>
+                                                <option>Petrol</option>
+                                                <option>Diesel</option>
+                                                <option>Hybrid</option>
+                                                <option>Electric</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="mono-eyebrow mb-2 block">Seats</label>
+                                            <input type="number" className="w-full border-b py-2 outline-none" value={edit.seats} onChange={e => setEdit({...edit, seats: e.target.value})} />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="mono-eyebrow mb-4 block">Photos (Select multiple)</label>
+                                        <input type="file" multiple onChange={e => handlePhotoUpload(edit.id, e.target.files)} className="mb-4" />
+                                        <div className="flex gap-3 overflow-x-auto py-4 hide-scrollbar">
+                                            {(photos[edit.id] || []).map((url, i) => (
+                                                <div key={i} className="relative w-24 h-24 flex-shrink-0 group">
+                                                    <img src={url} className="w-full h-full object-cover rounded-xl border" />
+                                                    <button onClick={() => {
+                                                        const up = [...photos[edit.id]]; up.splice(i, 1);
+                                                        setPhotos({...photos, [edit.id]: up});
+                                                        localStorage.setItem('udrive-photos', JSON.stringify({...photos, [edit.id]: up}));
+                                                    }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs">✕</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4 pt-10">
+                                        <button onClick={() => { saveFleet(fleet.map(x => x.id === edit.id ? edit : x)); setEdit(null); }} className="flex-grow bg-black text-white py-4 rounded-2xl font-bold">Save Changes</button>
+                                        <button onClick={() => setEdit(null)} className="px-8 border rounded-2xl">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
